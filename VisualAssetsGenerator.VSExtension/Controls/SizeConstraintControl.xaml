@@ -1,0 +1,87 @@
+﻿<UserControl x:Class="VisualAssetGenerator.Controls.SizeConstraintControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:vsshell="clr-namespace:Microsoft.VisualStudio.Shell;assembly=Microsoft.VisualStudio.Shell.15.0"
+             xmlns:model="clr-namespace:VisualAssetGenerator.Model"
+             mc:Ignorable="d">
+    <FrameworkElement.Resources>
+        <Style x:Key="BaseTextBlockStyle" TargetType="{x:Type TextBlock}">
+            <Setter Property="Foreground"
+              Value="{DynamicResource {x:Static vsshell:VsBrushes.WindowTextKey}}"/>
+        </Style>
+        <Style TargetType="{x:Type CheckBox}">
+            <Setter Property="Foreground" Value="{DynamicResource {x:Static vsshell:VsBrushes.WindowTextKey}}"/>
+        </Style>
+        <!--<Style TargetType="{x:Type Expander}">
+            <Setter Property="Foreground" Value="{DynamicResource {x:Static vsshell:VsBrushes.WindowTextKey}}"/>
+        </Style>-->
+        <Style TargetType="{x:Type ToolTip}">
+            <Setter Property="Background" Value="{DynamicResource {x:Static vsshell:VsBrushes.ToolWindowBackgroundKey}}"/>
+        </Style>
+    </FrameworkElement.Resources>
+    <FrameworkElement.DataContext>
+        <model:SizeConstraints x:Name="ViewModel"/>
+    </FrameworkElement.DataContext>
+    <Grid>
+        <Expander x:Name="ContentFractionExpander" Header="Content Sizing">
+            <StackPanel>
+                <ListBox x:Name="lbContentFraction" Margin="0,8" ItemsSource="{Binding Path=., Mode=TwoWay}" >
+                    <ItemsControl.ItemContainerStyle>
+                        <Style TargetType="{x:Type ListBoxItem}">
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                            <Setter Property="Focusable" Value="false"/>
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="{x:Type ListBoxItem}">
+                                        <Grid Background="{TemplateBinding Background}">
+                                            <ContentPresenter 
+                                                ContentTemplate="{TemplateBinding ContentTemplate}"
+                                                Content="{TemplateBinding Content}"
+                                                HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                Margin="{TemplateBinding Padding}">
+                                            </ContentPresenter>
+                                        </Grid>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ItemsControl.ItemContainerStyle>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="model:SizeConstraintData">
+                            <Grid Height="35">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="10*"/>
+                                    <ColumnDefinition Width="25*"/>
+                                    <ColumnDefinition MinWidth="35" Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Margin="5" Grid.Column="0" TextWrapping="Wrap" VerticalAlignment="Center" Text="{Binding Title}"/>
+                                <Slider Name="SliderContentFraction" 
+                                        Style="{x:Null}"
+                                            Grid.Column="1" 
+                                            AutoToolTipPlacement="TopLeft"
+                                            Margin="10,0"
+                                            IsSnapToTickEnabled="false" 
+                                            Maximum="100" 
+                                            Minimum="1"
+                                            TickPlacement="BottomRight" 
+                                            Ticks="15, 25, 33, 50, 66, 75, 85"
+                                            Value="{Binding ContentFraction, Mode=TwoWay}">
+                                </Slider>
+                                <TextBlock Grid.Column="2" MinWidth="20" VerticalAlignment="Top" TextAlignment="Right" Margin="0, 2, 5, 0"
+                                           Text="{Binding ElementName=SliderContentFraction, Path=Value, StringFormat={}{0:0}%}"/>
+                            </Grid>
+                            <DataTemplate.Resources>
+                                <Style TargetType="{x:Type TextBlock}" 
+                                       BasedOn="{StaticResource BaseTextBlockStyle}" />
+                            </DataTemplate.Resources>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ListBox>
+                <Button Click="ButtonSetDefaultValues_OnClick" HorizontalAlignment="Right"
+                    Content="Reset to defaults" Padding="4"/>
+            </StackPanel>
+        </Expander>
+    </Grid>
+</UserControl>
