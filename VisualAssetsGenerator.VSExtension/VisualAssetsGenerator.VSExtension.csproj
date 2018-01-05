@@ -141,6 +141,10 @@
     <Content Include="Ghostscript\gswin32c.exe">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
+    <Content Include="Preview.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
     <Content Include="Resources\VisualAssetsGeneratorPackage.ico">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
