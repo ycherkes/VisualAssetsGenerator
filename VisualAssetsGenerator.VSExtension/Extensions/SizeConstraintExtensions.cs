@@ -21,15 +21,15 @@ namespace VisualAssetGenerator.Extensions
 
             var contentWidth = constraint.Size.Width * horizontalContentFraction;
             var paddingWidth = (int) Math.Round((constraint.Size.Width - contentWidth) / 2.0);
-            var contentHeight = constraint.Size.Height * verticalContentFraction;
-            var paddingHeight = (int) Math.Round((constraint.Size.Height - contentHeight) / 2.0);
+            //var contentHeight = constraint.Size.Height * verticalContentFraction;
+            //var paddingHeight = (int) Math.Round((constraint.Size.Height - contentHeight) / 2.0);
 
-            PaddingField.SetValue(constraint, new Thickness(paddingWidth, paddingHeight, paddingWidth, paddingHeight));
+            PaddingField.SetValue(constraint, new Thickness(paddingWidth, 0, paddingWidth, 0));
         }
 
         public static void UpdatePadding(this SizeConstraint constraint, SizeConstraintData data)
         {
-            UpdatePadding(constraint, (double)data.ContentFraction / 100, (double)data.ContentFraction / 100);
+            UpdatePadding(constraint, (double)data.ContentWidth / 100, (double)data.ContentWidth / 100);
         }
     }
 }

@@ -25,7 +25,7 @@
         <model:SizeConstraints x:Name="ViewModel"/>
     </FrameworkElement.DataContext>
     <Grid>
-        <Expander x:Name="ContentFractionExpander" Header="Content Sizing">
+        <Expander x:Name="ContentFractionExpander" Header="Content Width">
             <StackPanel>
                 <ListBox x:Name="lbContentFraction" Margin="0,8" ItemsSource="{Binding Path=., Mode=TwoWay}" >
                     <ItemsControl.ItemContainerStyle>
@@ -67,7 +67,7 @@
                                             Minimum="1"
                                             TickPlacement="BottomRight" 
                                             Ticks="15, 25, 33, 50, 66, 75, 85"
-                                            Value="{Binding ContentFraction, Mode=TwoWay}">
+                                            Value="{Binding ContentWidth, Mode=TwoWay}">
                                 </Slider>
                                 <TextBlock Grid.Column="2" MinWidth="20" VerticalAlignment="Top" TextAlignment="Right" Margin="0, 2, 5, 0"
                                            Text="{Binding ElementName=SliderContentFraction, Path=Value, StringFormat={}{0:0}%}"/>

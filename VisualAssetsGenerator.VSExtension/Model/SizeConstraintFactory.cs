@@ -17,57 +17,57 @@ namespace VisualAssetGenerator.Model
                 {
                     ImageType = "SmallTile",
                     Title = "Small Tile",
-                    ContentFraction = 50
+                    ContentWidth = 50
                 },
                 new SizeConstraintData
                 {
                     ImageType = "MediumTile",
                     Title = "Medium Tile",
-                    ContentFraction = 33
+                    ContentWidth = 33
                 },
                 new SizeConstraintData
                 {
                     ImageType = "WideTile",
                     Title = "Wide Tile",
-                    ContentFraction = 33
+                    ContentWidth = 16
                 },
                 new SizeConstraintData
                 {
                     ImageType = "LargeTile",
                     Title = "Large Tile",
-                    ContentFraction = 33
+                    ContentWidth = 33
                 },
                 new SizeConstraintData
                 {
                     ImageType = "AppIcon",
                     Title = "App Icon",
-                    ContentFraction = 75
+                    ContentWidth = 75
                 },
                 new SizeConstraintData
                 {
                     ImageType = "AppIcon",
                     Title = "Alternate App Icon",
                     QualifierName = "AlternateForm",
-                    ContentFraction = 100
+                    ContentWidth = 100
                 },
                 new SizeConstraintData
                 {
                     ImageType = "SplashScreen",
                     Title = "Splash Screen",
-                    ContentFraction = 33
+                    ContentWidth = 16
                 },
                 new SizeConstraintData
                 {
 
                     ImageType = "BadgeLogo",
                     Title = "Badge Logo",
-                    ContentFraction = 100
+                    ContentWidth = 100
                 },
                 new SizeConstraintData
                 {
                     ImageType = "PackageLogo",
                     Title = "Package Logo",
-                    ContentFraction = 100
+                    ContentWidth = 100
                 },
             };
         }
@@ -89,7 +89,7 @@ namespace VisualAssetGenerator.Model
 
             currStd.ForEach(x =>
             {
-                x.Current.ContentFraction = x.Standard.ContentFraction;
+                x.Current.ContentWidth = x.Standard.ContentWidth;
             });
         }
 
@@ -104,9 +104,9 @@ namespace VisualAssetGenerator.Model
                     Current = curr.Constraint
                 }).ToList();
 
-            currStd.Where(x => x.Current.ContentFraction != x.Loaded.ContentFraction).ToList().ForEach(x =>
+            currStd.Where(x => x.Current.ContentWidth != x.Loaded.ContentWidth).ToList().ForEach(x =>
             {
-                x.Current.ContentFraction = x.Loaded.ContentFraction;
+                x.Current.ContentWidth = x.Loaded.ContentWidth;
             });
         }
     }

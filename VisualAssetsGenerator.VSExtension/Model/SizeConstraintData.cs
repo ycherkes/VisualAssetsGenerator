@@ -6,7 +6,7 @@ namespace VisualAssetGenerator.Model
     class SizeConstraintData : INotifyPropertyChanged
     {
         private string _imageType;
-        private int _contentFraction;
+        private int _contentWidth;
         private string _qualifierName;
         private string _title;
 
@@ -30,12 +30,12 @@ namespace VisualAssetGenerator.Model
             }
         }
 
-        public int ContentFraction
+        public int ContentWidth
         {
-            get => _contentFraction;
+            get => _contentWidth;
             set
             {
-                _contentFraction = value;
+                _contentWidth = value;
                 OnPropertyChanged();
             }
         }
@@ -61,7 +61,7 @@ namespace VisualAssetGenerator.Model
         {
             return new SizeConstraintData
             {
-                ContentFraction = ContentFraction,
+                ContentWidth = ContentWidth,
                 ImageType = ImageType,
                 QualifierName = QualifierName,
                 Title = Title
