@@ -40,13 +40,13 @@ namespace VisualAssetGenerator.Model
                 new SizeConstraintData
                 {
                     ImageType = "AppIcon",
-                    Title = "App Icon",
+                    Title = "App Icon Plated",
                     ContentWidth = 75
                 },
                 new SizeConstraintData
                 {
                     ImageType = "AppIcon",
-                    Title = "Alternate App Icon",
+                    Title = "App Icon Unplated",
                     QualifierName = "AlternateForm",
                     ContentWidth = 100
                 },
