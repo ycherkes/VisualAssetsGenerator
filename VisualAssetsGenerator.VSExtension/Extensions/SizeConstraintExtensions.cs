@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Reflection;
 using System.Windows;
 using Microsoft.VisualStudio.DesignTools.ImageSet;
@@ -9,7 +8,7 @@ namespace VisualAssetGenerator.Extensions
 {
     internal static class SizeConstraintExtensions
     {
-        private static readonly FieldInfo PaddingField = typeof(SizeConstraint).GetFields(BindingFlags.Instance | BindingFlags.NonPublic).Single(x => x.FieldType == typeof(Thickness));
+        private static readonly FieldInfo PaddingField = typeof(SizeConstraint).GetField($"<{nameof(SizeConstraint.Padding)}>k__BackingField", BindingFlags.Instance | BindingFlags.NonPublic);
 
         public static void UpdatePadding(this SizeConstraint constraint, double horizontalContentFraction,
             double verticalContentFraction)

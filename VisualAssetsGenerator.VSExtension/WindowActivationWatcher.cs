@@ -22,7 +22,6 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using VisualAssetGenerator.Extensions;
 using VisualAssetGenerator.Model;
-using Xceed.Wpf.AvalonDock.Controls;
 using Image = System.Drawing.Image;
 using SizeConstraintControl = VisualAssetGenerator.Controls.SizeConstraintControl;
 
@@ -313,11 +312,12 @@ namespace VisualAssetGenerator
             control.Loaded -= AssetGeneratorControl_Loaded;
             var generateButton = control.FindVisualChildren<Button>().FirstOrDefault(x => x.Name == "GenerateButton");
 
-            var parent = (Grid)(generateButton?.Parent as FrameworkElement)?.Parent;
-            
+            var parent = (Grid) (generateButton?.Parent as FrameworkElement)?.Parent;
 
-            parent?.RowDefinitions.Add(new RowDefinition{Height = GridLength.Auto});
-            parent?.RowDefinitions.Add(new RowDefinition{Height = GridLength.Auto});
+            if (parent == null) return;
+
+            parent.RowDefinitions.Add(new RowDefinition{Height = GridLength.Auto});
+            parent.RowDefinitions.Add(new RowDefinition{Height = GridLength.Auto});
 
             //var expanderStyle = Application.Current.TryFindResource(typeof(Expander)) as Style;
             //var separatorStyle = Application.Current.TryFindResource(typeof(Separator)) as Style;
@@ -338,7 +338,7 @@ namespace VisualAssetGenerator
             _sizeControl.Width = 550;
             _sizeControl.HorizontalAlignment = HorizontalAlignment.Left;
             _sizeControl.HorizontalContentAlignment = HorizontalAlignment.Stretch;
-            parent?.Children.Add(_sizeControl);
+            parent.Children.Add(_sizeControl);
             ApplyFilter(_imageSetViewModel);
         }
 
