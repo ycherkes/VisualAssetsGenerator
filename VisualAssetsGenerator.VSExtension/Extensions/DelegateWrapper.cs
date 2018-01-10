@@ -107,4 +107,23 @@ namespace VisualAssetGenerator.Extensions
             invocation.Proceed();
         }
     }
+
+    internal class ImageGeneratorInterceptor : IInterceptor
+    {
+        public void Intercept(IInvocation invocation)
+        {
+            var isVectorField = typeof(ImageSetSource).GetField($"<{nameof(ImageSetSource.IsVector)}>k__BackingField", BindingFlags.Instance | BindingFlags.NonPublic);
+
+            if (invocation.MethodInvocationTarget.Name == "GenerateAsync" && invocation.TargetType.Name == "ImageGenerator")
+            {
+                var targetRoot =  (ImageSetTarget) invocation.Arguments[0];
+                if (targetRoot.Source != null && !targetRoot.Source.IsVector && MagickImageReader.SupportedFormats.Contains(targetRoot.Source.Extension, StringComparer.CurrentCultureIgnoreCase))
+                {
+                    isVectorField.SetValue(targetRoot.Source, !targetRoot.Source.IsVector);
+                }
+            }
+
+            invocation.Proceed();
+        }
+    }
 }

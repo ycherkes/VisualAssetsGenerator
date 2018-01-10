@@ -1,4 +1,6 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -41,10 +43,16 @@ namespace VisualAssetGenerator
         /// </summary>
         public VisualAssetsGeneratorPackage()
         {
+            AppDomain.CurrentDomain.TypeResolve += CurrentDomainOnTypeResolve;
             // Inside this method you can place any initialization code that does not require
             // any Visual Studio service because at this point the package object is created but
             // not sited yet inside Visual Studio environment. The place to do all the other
             // initialization is the Initialize method.
+        }
+
+        private  Assembly CurrentDomainOnTypeResolve(object sender, ResolveEventArgs args)
+        {
+            return null;
         }
 
         #region Package Members
