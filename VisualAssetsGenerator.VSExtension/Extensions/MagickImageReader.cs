@@ -10,6 +10,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Xps.Packaging;
 using ImageMagick;
 using Microsoft.VisualStudio.DesignTools.ImageSet;
+using Color = System.Windows.Media.Color;
 
 namespace VisualAssetGenerator.Extensions
 {
@@ -128,26 +129,20 @@ namespace VisualAssetGenerator.Extensions
         {
             var readSettings = new MagickReadSettings
             {
-                BackgroundColor = MagickColors.Transparent,
-                
+                BackgroundColor = MagickColors.Transparent
             };
+
+            if (size?.IsEmpty == false)
+            {
+                readSettings.Width = size.Value.Width;
+                readSettings.Height = size.Value.Height;
+            }
 
             var magickImage = new MagickImage(new FileInfo(filePath), readSettings)
             {
                 Format = MagickFormat.Png,
                 Quality = 100
             };
-
-            if (size == null || 
-                size.Value.IsEmpty ||
-                magickImage.Width == size.Value.Width && magickImage.Height == size.Value.Height) return magickImage;
-
-            var geometry = new MagickGeometry(size.Value.Width, size.Value.Height)
-            {
-                IgnoreAspectRatio = false
-            };
-
-            magickImage.Resize(geometry);
 
             return magickImage;
         }        

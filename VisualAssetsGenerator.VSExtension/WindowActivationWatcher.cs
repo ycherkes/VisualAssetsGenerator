@@ -206,14 +206,17 @@ namespace VisualAssetGenerator
             filePickerField.SetValue(imageSetModel, proxy);
 
             var imageReaderFactory = Exposed.From(imageGenerator).imageReaderFactory;
-            //var imageReaderFactoryType = Exposed.From(imageReaderFactory.GetType());
-            //var supportdedVectorImageExtensions = (ICollection<string>)imageReaderFactoryType.SupportedVectorImageExtensions;
+            var imageReaderFactoryType = Exposed.From(imageReaderFactory.GetType());
+            var supportdedVectorImageExtensions = (ICollection<string>)imageReaderFactoryType.SupportedVectorImageExtensions;
 
-            //if (!supportdedVectorImageExtensions.Any(x => new[] { ".svg", ".wmf" }.Contains(x)))
-            //{
-            //    supportdedVectorImageExtensions.Add(".svg");
-            //    supportdedVectorImageExtensions.Add(".wmf");
-            //}            
+            var toAddInSupported = MagickImageReader.SupportedFormats
+                                                    .Except(supportdedVectorImageExtensions)
+                                                    .ToArray();
+
+            foreach (var format in toAddInSupported)
+            {
+                supportdedVectorImageExtensions.Add(format);
+            }            
 
             if(!(Exposed.From(imageReaderFactory).imageReaders is IDictionary readers)) return;
 
@@ -227,9 +230,10 @@ namespace VisualAssetGenerator
                                                    .GetTypes()
                                                    .First(x => x.Name == "IImageReader"); //.GetType($"{assembly.GetName().Name}.IImageReader");
 
-                var wrapper = DelegateWrapper.WrapAs((Func<string, IEnumerable<IImageConstraint>, Task<Image>>) MagickImageReader.LoadAsync,
-                                                     (Func<string, IEnumerable<IImageConstraint>, Task<Stream>>) MagickImageReader.LoadStreamAsync, 
-                                                      type);
+
+                var wrapper = DelegateWrapper.WrapAs((Func<string, IEnumerable<IImageConstraint>, Task<Image>>)MagickImageReader.LoadAsync,
+                                                     (Func<string, IEnumerable<IImageConstraint>, Task<Stream>>)MagickImageReader.LoadStreamAsync,
+                                                     type);
 
                 foreach (var format in formatsToAdd)
                 {
