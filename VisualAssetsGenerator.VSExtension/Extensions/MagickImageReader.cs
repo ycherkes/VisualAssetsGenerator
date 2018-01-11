@@ -10,7 +10,8 @@ using System.Windows.Media.Imaging;
 using System.Windows.Xps.Packaging;
 using ImageMagick;
 using Microsoft.VisualStudio.DesignTools.ImageSet;
-using Color = System.Windows.Media.Color;
+using Size = System.Drawing.Size;
+
 
 namespace VisualAssetGenerator.Extensions
 {
@@ -38,14 +39,32 @@ namespace VisualAssetGenerator.Extensions
             var sizeConstraint = constraints?.OfType<SizeConstraint>().FirstOrDefault();
 
             if (".xps".Equals(Path.GetExtension(path), StringComparison.InvariantCultureIgnoreCase))
-                return GetXpsStream(path, sizeConstraint);
+                return GetXpsStream(path, CalculateRenderSize(sizeConstraint));
 
-            return await GetMagickStream(path, sizeConstraint);
+            return await GetMagickStream(path, CalculateRenderSize(sizeConstraint));
         }
 
-        private static async Task<Stream> GetMagickStream(string path, SizeConstraint sizeConstraint)
+        private static Size? CalculateRenderSize(SizeConstraint constraint)
         {
-            using (var mi = GetMagickImage(path, sizeConstraint?.Size))
+            if (constraint == null) return null;
+
+            if (!constraint.ShouldUsePadding || constraint.Padding.Bottom == 0 && constraint.Padding.Top ==  0 && constraint.Padding.Left == 0 && constraint.Padding.Right == 0) return constraint.Size;
+
+            var thickness = constraint.Padding;
+            var size = constraint.Size;
+            var width = size.Width - (int)Math.Round(thickness.Left + thickness.Right);
+            if (width < 0)
+                width = 0;
+            var height = size.Height - (int)Math.Round(thickness.Top + thickness.Bottom);
+            if (height < 0)
+                height = 0;
+            
+            return new Size(width, height);
+        }
+
+        private static async Task<Stream> GetMagickStream(string path, Size? sizeConstraint)
+        {
+            using (var mi = GetMagickImage(path, sizeConstraint))
             {
                 var stream = new MemoryStream();
                 mi.Write(stream);
@@ -56,7 +75,7 @@ namespace VisualAssetGenerator.Extensions
             }
         }
 
-        private static Stream GetXpsStream(string path, SizeConstraint sizeConstraint)
+        private static Stream GetXpsStream(string path, Size? sizeConstraint)
         {
             using (var xpsDoc = new XpsDocument(path, FileAccess.Read))
             {
@@ -67,7 +86,7 @@ namespace VisualAssetGenerator.Extensions
 
                 var firstPage = docSeq.DocumentPaginator.GetPage(0);
 
-                var size = sizeConstraint?.Size ?? new Size
+                var size = sizeConstraint ?? new Size
                 {
                     Height = (int) firstPage.Size.Height,
                     Width = (int) firstPage.Size.Width
