@@ -17,7 +17,6 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.AppxManifestDesigner.Designer;
 using Microsoft.VisualStudio.AppxManifestDesigner.Designer.ImageSet;
 using Microsoft.VisualStudio.DesignTools.ImageSet;
-using Microsoft.VisualStudio.DesignTools.ImageSet.Telemetry;
 using Microsoft.VisualStudio.DesignTools.ImageSet.View;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -81,8 +80,6 @@ namespace VisualAssetGenerator
             if (typedProperty != FrameType.Document) return VSConstants.S_OK;
 
             if (!ErrorHandler.Succeeded(windowFrame.GetProperty((int) __VSFPROPID.VSFPROPID_pszMkDocument, out untypedProperty))) return VSConstants.S_OK;
-
-            //var docPath = (string)untypedProperty;
 
             if (!ErrorHandler.Succeeded(windowFrame.GetProperty((int) __VSFPROPID.VSFPROPID_Caption, out untypedProperty))) return VSConstants.S_OK;
 
@@ -169,8 +166,6 @@ namespace VisualAssetGenerator
 
             var imageSetViewModel = _imageSetViewModel = (ImageSetViewModel)Exposed.From(manifestDesignerUserControl).imageSetViewModel;
 
-            //imageSetViewModel.PropertyChanged += ImageSetViewModel_PropertyChanged1;
-
             var visualAssetsControl = (VisualAssetsControl)Exposed.From(manifestDesignerUserControl).visualAssetsControl;
             if (!visualAssetsControl.IsLoaded)
             {
@@ -182,15 +177,7 @@ namespace VisualAssetGenerator
             
             var imageSetTargetViewModels = (IList<ImageSetTargetViewModel>)imageSetViewModel.ImageTypeTargets;
 
-            //var rootManager = Exposed.From(imageSetModel).rootManager;
-            //Exposed.From(rootManager).Initialize();
-            //var targetTreeFactory = Exposed.From(rootManager).requiredTreeFactory;
             _imageSetTarget = (ImageSetTarget)imageSetModel.Root;
-
-            //UpdatePaddings(imageSetTarget, imageSetTargetViewModels, imageSetViewModel);
-            //var res1 = imageSetViewModel.Assets.FindTargets(firstSizeConstraint);
-
-            //imageSetTargetViewModels.SelectMany(x => x. )
 
             var imageGenerator = Exposed.From(imageSetModel).imageGenerator;
 
@@ -212,12 +199,6 @@ namespace VisualAssetGenerator
 
             if (filePicker.GetType().Name == "IFilePickerProxy") return;
 
-            //foreach (var vm in imageSetTargetViewModels)
-            //{
-            //    vm.PropertyChanged -= Vm_PropertyChanged;
-            //    vm.PropertyChanged += Vm_PropertyChanged;
-            //}
-
             imageSetTargetViewModels.Single(x => x.ImageType == null).PropertyChanged += ImageSetTargetViewModel_PropertyChanged;
             imageSetViewModel.PropertyChanged += ImageSetViewModel_PropertyChanged;
 
@@ -232,28 +213,8 @@ namespace VisualAssetGenerator
             filePickerField.SetValue(imageSetModel, proxy);
 
             var imageReaderFactory = Exposed.From(imageGenerator).imageReaderFactory;
-            //var imageReaderFactoryType = Exposed.From(imageReaderFactory.GetType());
-            //var supportdedVectorImageExtensions = (ICollection<string>)imageReaderFactoryType.SupportedVectorImageExtensions;
-
-            //var toAddInSupported = MagickImageReader.SupportedFormats
-            //                                        .Except(supportdedVectorImageExtensions)
-            //                                        .ToArray();
-
-            //foreach (var format in toAddInSupported)
-            //{
-            //    supportdedVectorImageExtensions.Add(format);
-            //}
-
+            
             if (!(Exposed.From(imageReaderFactory).imageReaders is IDictionary readers)) return;
-
-            //foreach (var reader in (from readerKey in readers.Keys.OfType<string>().Select((x, i) => new { x, i })
-            //                        join readerValues in readers.Values.OfType<object>().Select((x, i) => new { x, i })
-            //                        on readerKey.i equals readerValues.i
-            //                        where MagickImageReader.SupportedFormats.Contains(readerKey.x) && readerValues.x.GetType().Name != "IImageReaderProxy"
-            //                        select readerKey.x).ToArray())
-            //{
-            //    readers.Remove(reader);
-            //}
 
             var formatsToAdd = MagickImageReader.SupportedFormats
                                                 .Except(readers.Keys.OfType<string>())
@@ -291,28 +252,10 @@ namespace VisualAssetGenerator
                     && formatsToAdd.Any(x => x.Equals(Path.GetExtension(imageSetTargetViewModel.SourceText), StringComparison.InvariantCultureIgnoreCase))
                     && imageSetTargetViewModel.SourceImage == null)
                 {
-                    var text = imageSetTargetViewModel.SourceText;
-                    imageSetTargetViewModel.SourceText = null;
-                    imageSetTargetViewModel.SourceText = text;
-                    manifestDesignerUserControl.Dispatcher.InvokeAsync(() => exposedModel.PropertyChanged("SourceText"));
-                    //manifestDesignerUserControl.Dispatcher.InvokeAsync(() => exposedModel.UpdateImagePreviewAsync());
+                    manifestDesignerUserControl.Dispatcher.InvokeAsync(() => exposedModel.UpdateImagePreviewAsync());
                 }
             }
         }
-
-        //private static void ImageSetViewModel_PropertyChanged1(object sender, PropertyChangedEventArgs e)
-        //{
-            
-        //}
-
-        //private static void Vm_PropertyChanged(object sender, PropertyChangedEventArgs e)
-        //{
-        //    if (e.PropertyName == "SourceImage")
-        //    {
-        //        //var model = Exposed.From(sender);
-        //        //((ImageSetTarget)model.ImageSetTarget).Source = new ImageSetSource(model.SourceText);
-        //    }
-        //}
 
         private static void ImageSetViewModel_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
@@ -375,15 +318,10 @@ namespace VisualAssetGenerator
             parent.RowDefinitions.Add(new RowDefinition{Height = GridLength.Auto});
             parent.RowDefinitions.Add(new RowDefinition{Height = GridLength.Auto});
 
-            //var expanderStyle = Application.Current.TryFindResource(typeof(Expander)) as Style;
-            //var separatorStyle = Application.Current.TryFindResource(typeof(Separator)) as Style;
-
             _sizeControl = new SizeConstraintControl();
 
             var expander = control.FindVisualAncestor<Expander>();
             _sizeControl.ContentFractionExpander.Style = expander.Style;
-
-            //_sizeControl.ContentFractionExpander.Style = expanderStyle;
 
             _sizeControl.DataChanged += SizeConstraints_CollectionChanged;
             
