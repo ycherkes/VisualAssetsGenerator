@@ -21,7 +21,7 @@ namespace VisualAssetGenerator.Extensions
 
         static MagickImageReader()
         {
-            SupportedFormats = new[] { ".emf", ".eps", ".svg", ".wmf", ".xps" };
+            SupportedFormats = new[] { ".emf", ".eps", ".psd", ".svg", ".wmf", ".xps" };
             var currentPackageDir = Path.GetDirectoryName(typeof(MagickImageReader).GetAssemblyLocalPath());
             var ghostscriptDirectory = Path.Combine(currentPackageDir, "Ghostscript");
             MagickNET.SetGhostscriptDirectory(ghostscriptDirectory);
