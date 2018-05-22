@@ -117,7 +117,7 @@ namespace VisualAssetGenerator
 
             if (dte.ActiveDocument == null) return;
 
-            var uiObject = Exposed.From(((dynamic) dte.ActiveDocument).ActiveWindow.Object).EditorControl;
+            var uiObject = Exposed.From(((dynamic)dte.ActiveDocument).ActiveWindow.Object).Content;
 
             var mduc = (ManifestDesignerUserControlProxy) uiObject;
 
@@ -157,7 +157,25 @@ namespace VisualAssetGenerator
         {
             ((ManifestDesignerUserControl) sender).Loaded -= ManifestDesignerUserControl_Loaded;
 
+            if (Exposed.From(sender).AppxDocData?.HasLoaded != true)
+            {
+                ((IManifestDocDataInternal)Exposed.From(sender).AppxDocData).Loaded += ManifestDocData_Loaded(sender);
+                return;
+            }
+
             ManifestDesignerUserControl_Loaded(sender);
+        }
+
+        private static EventHandler ManifestDocData_Loaded(object sender)
+        {
+            return (s, e) =>  ManifestDocData_Loaded(s, e, sender);
+        }
+
+        private static void ManifestDocData_Loaded(object sender, EventArgs e, object s)
+        {
+            ((IManifestDocDataInternal)sender).Loaded -= ManifestDocData_Loaded(s);
+
+            ManifestDesignerUserControl_Loaded(s);
         }
 
         private static void ManifestDesignerUserControl_Loaded(object sender)
