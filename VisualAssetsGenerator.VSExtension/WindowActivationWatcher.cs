@@ -31,42 +31,56 @@ namespace VisualAssetGenerator
     // NOTE: This class will hook into the selection events and be responsible for monitoring selection changes
     internal sealed class WindowActivationWatcher : IVsSelectionEvents, IDisposable
     {
-        private uint _monSelCookie;
-        private IServiceProvider _serviceProvider;
+        private IVsMonitorSelection _monitorSelection;
+        private readonly uint _monSelCookie;
         private static ImageSetTarget _imageSetTarget;
         private static SizeConstraintControl _sizeControl;
         private static ImageSetViewModel _imageSetViewModel;
 
-        internal WindowActivationWatcher(IServiceProvider serviceProvider)
+        internal WindowActivationWatcher(IVsMonitorSelection monitorSelection)
         {
-            Validate.IsNotNull(serviceProvider, "serviceProvider");
-            _serviceProvider = serviceProvider;
+            //ThreadHelper.ThrowIfNotOnUIThread();
 
-            var monSel = (IVsMonitorSelection) _serviceProvider.GetService(typeof(SVsShellMonitorSelection));
-            // NOTE: We can ignore the return code here as there really isn't anything reasonable we could do to deal with failure, 
-            // and it is essentially a no-fail method.
-            monSel?.AdviseSelectionEvents(this, out _monSelCookie);
+            AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
+
+            Validate.IsNotNull(monitorSelection, "monitorSelection");
+
+            _monitorSelection = monitorSelection;
+
+            _monitorSelection?.AdviseSelectionEvents(this, out _monSelCookie);
+        }
+
+        private Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
+        {
+            var assemblies = new[]
+            {
+                "Microsoft.VisualStudio.AppxPackage",
+                "Microsoft.VisualStudio.AppxManifestDesigner.UAP",
+                "Microsoft.VisualStudio.DesignTools.ImageSet"
+            }.ToHashSet();
+
+            var assemblyName = args.Name.Split(',').First();
+
+            if (!assemblies.Contains(assemblyName)) return null;
+
+            return AppDomain.CurrentDomain.GetAssemblies().SingleOrDefault(x => x.GetName().Name == assemblyName);
         }
 
         public void Dispose()
         {
-            if (_monSelCookie != 0U && _serviceProvider != null)
+            if (_monSelCookie != 0U && _monitorSelection != null)
             {
-                var monSel = (IVsMonitorSelection) _serviceProvider.GetService(typeof(SVsShellMonitorSelection));
-                if (monSel != null)
-                {
-                    // NOTE: We can ignore the return code here as there really isn't anything reasonable we could do to deal with failure, 
-                    // and it is essentially a no-fail method.
-                    monSel.UnadviseSelectionEvents(_monSelCookie);
-                    _monSelCookie = 0U;
-                }
+                _monitorSelection.UnadviseSelectionEvents(_monSelCookie);
             }
 
-            _serviceProvider = null;
+            _monitorSelection = null;
+
+            AppDomain.CurrentDomain.AssemblyResolve -= CurrentDomain_AssemblyResolve;
         }
 
         public int OnElementValueChanged(uint elementid, object varValueOld, object varValueNew)
         {
+            //ThreadHelper.ThrowIfNotOnUIThread();
             var elementId = (VSConstants.VSSELELEMID) elementid;
             if (elementId != VSConstants.VSSELELEMID.SEID_WindowFrame || varValueNew == null) return VSConstants.S_OK;
 
@@ -113,22 +127,24 @@ namespace VisualAssetGenerator
 
         private static void RegisterVectorReader()
         {
+            //ThreadHelper.ThrowIfNotOnUIThread();
+
             var dte = (DTE) ServiceProvider.GlobalProvider.GetService(typeof(DTE));
 
             if (dte.ActiveDocument == null) return;
 
             var uiObject = Exposed.From(((dynamic)dte.ActiveDocument).ActiveWindow.Object).Content;
 
-            var mduc = (ManifestDesignerUserControlProxy) uiObject;
+            //ManifestDesignerUserControlProxy mduc = (ManifestDesignerUserControlProxy) uiObject;
 
-            if (!mduc.IsLoading)
+            if (!uiObject.IsLoading)
             {
-                Mduc_Loaded(mduc);
+                Mduc_Loaded((object)uiObject);
                 return;
             }
 
             var pd = DependencyPropertyDescriptor.FromProperty(ManifestDesignerUserControlProxy.IsLoadingProperty, typeof(ManifestDesignerUserControlProxy));
-            pd.AddValueChanged(mduc, Mduc_Loaded);
+            pd.AddValueChanged((object)uiObject, Mduc_Loaded);
         }
 
         private static void Mduc_Loaded(object sender, EventArgs e)
@@ -142,7 +158,7 @@ namespace VisualAssetGenerator
         private static void Mduc_Loaded(object sender)
         {
             var exposed = Exposed.From(sender);
-            var manifestDesignerUserControl = (ManifestDesignerUserControl) exposed.contentPresenter.Content;
+            var manifestDesignerUserControl = (FrameworkElement) exposed.contentPresenter.Content;
 
             if (Exposed.From(manifestDesignerUserControl).imageSetModel == null)
             {
@@ -155,7 +171,7 @@ namespace VisualAssetGenerator
 
         private static void ManifestDesignerUserControl_Loaded(object sender, RoutedEventArgs e)
         {
-            ((ManifestDesignerUserControl) sender).Loaded -= ManifestDesignerUserControl_Loaded;
+            ((FrameworkElement) sender).Loaded -= ManifestDesignerUserControl_Loaded;
 
             if (Exposed.From(sender).AppxDocData?.HasLoaded != true)
             {
@@ -180,18 +196,16 @@ namespace VisualAssetGenerator
 
         private static void ManifestDesignerUserControl_Loaded(object sender)
         {
-            var manifestDesignerUserControl = (ManifestDesignerUserControl) sender;
+            var imageSetViewModel = _imageSetViewModel = (ImageSetViewModel)Exposed.From(sender).imageSetViewModel;
 
-            var imageSetViewModel = _imageSetViewModel = (ImageSetViewModel)Exposed.From(manifestDesignerUserControl).imageSetViewModel;
-
-            var visualAssetsControl = (VisualAssetsControl)Exposed.From(manifestDesignerUserControl).visualAssetsControl;
+            var visualAssetsControl = (FrameworkElement)Exposed.From(sender).visualAssetsControl;
             if (!visualAssetsControl.IsLoaded)
             {
                 visualAssetsControl.Loaded -=  VisualAssetsControl_Loaded;
                 visualAssetsControl.Loaded += VisualAssetsControl_Loaded;
             }
 
-            var imageSetModel = Exposed.From(manifestDesignerUserControl).imageSetModel;
+            var imageSetModel = Exposed.From(sender).imageSetModel;
             
             var imageSetTargetViewModels = (IList<ImageSetTargetViewModel>)imageSetViewModel.ImageTypeTargets;
 
@@ -266,11 +280,11 @@ namespace VisualAssetGenerator
                 var exposedModel = Exposed.From(imageSetTargetViewModel);
                 var previewImageLoader = exposedModel.previewImageLoader;
                 imageReaderFactoryField.SetValue(previewImageLoader, imageReaderFactory);
-                if (!string.IsNullOrEmpty(imageSetTargetViewModel.SourceText)
-                    && formatsToAdd.Any(x => x.Equals(Path.GetExtension(imageSetTargetViewModel.SourceText), StringComparison.InvariantCultureIgnoreCase))
-                    && imageSetTargetViewModel.SourceImage == null)
+                if (!string.IsNullOrEmpty(exposedModel.SourceText)
+                    && formatsToAdd.Any(x => x.Equals(Path.GetExtension(exposedModel.SourceText), StringComparison.InvariantCultureIgnoreCase))
+                    && exposedModel.SourceImage == null)
                 {
-                    manifestDesignerUserControl.Dispatcher.InvokeAsync(() => exposedModel.UpdateImagePreviewAsync());
+                    ((UserControl)sender).Dispatcher.InvokeAsync(() => exposedModel.UpdateImagePreviewAsync());
                 }
             }
         }
