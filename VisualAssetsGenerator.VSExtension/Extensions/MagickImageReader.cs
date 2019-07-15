@@ -30,7 +30,7 @@ namespace VisualAssetGenerator.Extensions
         public static async Task<Image> LoadAsync(string path, IEnumerable<IImageConstraint> constraints)
         {
             var stream = await LoadStreamAsync(path, constraints);
-
+            
             return Image.FromStream(stream);
         }
 
@@ -41,7 +41,7 @@ namespace VisualAssetGenerator.Extensions
             if (".xps".Equals(Path.GetExtension(path), StringComparison.InvariantCultureIgnoreCase))
                 return GetXpsStream(path, CalculateRenderSize(sizeConstraint));
 
-            return await GetMagickStream(path, CalculateRenderSize(sizeConstraint));
+            return await GetMagickStreamAsync(path, CalculateRenderSize(sizeConstraint));
         }
 
         private static Size? CalculateRenderSize(SizeConstraint constraint)
@@ -62,7 +62,7 @@ namespace VisualAssetGenerator.Extensions
             return new Size(width, height);
         }
 
-        private static async Task<Stream> GetMagickStream(string path, Size? sizeConstraint)
+        private static async Task<Stream> GetMagickStreamAsync(string path, Size? sizeConstraint)
         {
             using (var mi = GetMagickImage(path, sizeConstraint))
             {
@@ -132,16 +132,6 @@ namespace VisualAssetGenerator.Extensions
             };
 
             return new Tuple<Visual, Size>(root, scaledSize);
-        }
-
-        private static BitmapSource GetResizedBitmap(BitmapSource renderTarget, Size size)
-        {
-            var scaleHeight = size.Height / (float)renderTarget.Height;
-            var scaleWidth = size.Width / (float)renderTarget.Width;
-
-            var scale = Math.Min(scaleHeight, scaleWidth);
-
-            return new TransformedBitmap(renderTarget, new ScaleTransform(scale, scale));
         }
 
         private static MagickImage GetMagickImage(string filePath, Size? size)
