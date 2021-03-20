@@ -99,6 +99,8 @@ namespace VisualAssetGenerator
 
             var caption = (string) untypedProperty;
 
+            //return VSConstants.S_OK;
+
             if ("Package.appxmanifest".Equals(caption, StringComparison.CurrentCultureIgnoreCase))
                 RegisterVectorReader();
 
@@ -198,7 +200,10 @@ namespace VisualAssetGenerator
         {
             var imageSetViewModel = _imageSetViewModel = (ImageSetViewModel)Exposed.From(sender).imageSetViewModel;
 
+            if(imageSetViewModel == null) return;
+
             var visualAssetsControl = (FrameworkElement)Exposed.From(sender).visualAssetsControl;
+
             if (!visualAssetsControl.IsLoaded)
             {
                 visualAssetsControl.Loaded -=  VisualAssetsControl_Loaded;
@@ -261,6 +266,8 @@ namespace VisualAssetGenerator
 
                 var wrapper = DelegateWrapper.WrapAs((Func<string, IEnumerable<IImageConstraint>, Task<Image>>)MagickImageReader.LoadAsync,
                                                      (Func<string, IEnumerable<IImageConstraint>, Task<Stream>>)MagickImageReader.LoadStreamAsync,
+                                                     (Func<IEnumerable<string>>)(() => formatsToAdd),
+                                                     new DelegateWrapper.MethodByNameAndEnumReturnType("get_ImageGraphicsType", "ImageGraphicsType", "Vector"),
                                                      type);
 
                 foreach (var format in formatsToAdd)
