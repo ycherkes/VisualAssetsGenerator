@@ -1,9 +1,8 @@
-﻿using System;
-using System.Diagnostics.CodeAnalysis;
+﻿using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
+using System;
 using System.Runtime.InteropServices;
 using System.Threading;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
 using Task = System.Threading.Tasks.Task;
 
 namespace VisualAssetGenerator
@@ -26,25 +25,12 @@ namespace VisualAssetGenerator
     /// </para>
     /// </remarks>
     [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
-    [InstalledProductRegistration("#110", "#112", "1.0", IconResourceID = 400)] // Info on this package for Help/About
-    [ProvideMenuResource("Menus.ctmenu", 1)]
-    [ProvideAutoLoad(UIContextGuids.NoSolution, PackageAutoLoadFlags.BackgroundLoad)]
+    [ProvideAutoLoad(UIContextGuids80.SolutionExists, PackageAutoLoadFlags.BackgroundLoad)]
     [Guid(PackageGuidString)]
-    [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
     public sealed class VisualAssetsGeneratorPackage : AsyncPackage
     {
-        /// <summary>
-        /// SvgConverterToolWindowPackage GUID string.
-        /// </summary>
-        public const string PackageGuidString = "42FBAF77-485E-4700-8357-A066BE1DF84C";
+        private const string PackageGuidString = "cc9c557e-be6e-45bb-9c05-093d0efa93cc";
         private WindowActivationWatcher _windowActivationWatcher;
-
-        //protected override void Initialize()
-        //{
-        //    var monSel = (IVsMonitorSelection)GetService(typeof(SVsShellMonitorSelection));
-        //    _windowActivationWatcher = new WindowActivationWatcher(monSel);
-        //    base.Initialize();
-        //}
 
         protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
         {
@@ -52,6 +38,16 @@ namespace VisualAssetGenerator
             var monSel = (IVsMonitorSelection)await GetServiceAsync(typeof(SVsShellMonitorSelection));
             _windowActivationWatcher = new WindowActivationWatcher(monSel);
             await base.InitializeAsync(cancellationToken, progress);
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            ThreadHelper.ThrowIfNotOnUIThread();
+            if (disposing)
+            {
+                _windowActivationWatcher?.Dispose();
+            }
+            base.Dispose(disposing);
         }
     }
 }

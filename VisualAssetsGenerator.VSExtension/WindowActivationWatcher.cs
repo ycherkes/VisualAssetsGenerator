@@ -1,4 +1,16 @@
-﻿using System;
+﻿using Castle.DynamicProxy;
+using EnvDTE;
+using ExposedObject;
+using Microsoft;
+using Microsoft.Internal.VisualStudio.Shell;
+using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.AppxManifestDesigner.Designer;
+using Microsoft.VisualStudio.AppxManifestDesigner.Designer.ImageSet;
+using Microsoft.VisualStudio.DesignTools.ImageSet;
+using Microsoft.VisualStudio.DesignTools.ImageSet.View;
+using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -9,21 +21,11 @@ using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using Castle.DynamicProxy;
-using EnvDTE;
-using ExposedObject;
-using Microsoft.Internal.VisualStudio.Shell;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.AppxManifestDesigner.Designer;
-using Microsoft.VisualStudio.AppxManifestDesigner.Designer.ImageSet;
-using Microsoft.VisualStudio.DesignTools.ImageSet;
-using Microsoft.VisualStudio.DesignTools.ImageSet.View;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
 using VisualAssetGenerator.Extensions;
 using VisualAssetGenerator.Model;
 using Image = System.Drawing.Image;
 using SizeConstraintControl = VisualAssetGenerator.Controls.SizeConstraintControl;
+using Task = System.Threading.Tasks.Task;
 
 
 namespace VisualAssetGenerator
@@ -39,7 +41,7 @@ namespace VisualAssetGenerator
 
         internal WindowActivationWatcher(IVsMonitorSelection monitorSelection)
         {
-            //ThreadHelper.ThrowIfNotOnUIThread();
+            ThreadHelper.ThrowIfNotOnUIThread();
 
             AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
 
@@ -68,6 +70,7 @@ namespace VisualAssetGenerator
 
         public void Dispose()
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             if (_monSelCookie != 0U && _monitorSelection != null)
             {
                 _monitorSelection.UnadviseSelectionEvents(_monSelCookie);
@@ -80,28 +83,26 @@ namespace VisualAssetGenerator
 
         public int OnElementValueChanged(uint elementid, object varValueOld, object varValueNew)
         {
-            //ThreadHelper.ThrowIfNotOnUIThread();
-            var elementId = (VSConstants.VSSELELEMID) elementid;
+            ThreadHelper.ThrowIfNotOnUIThread();
+            var elementId = (VSConstants.VSSELELEMID)elementid;
             if (elementId != VSConstants.VSSELELEMID.SEID_WindowFrame || varValueNew == null) return VSConstants.S_OK;
 
             // NOTE: We have a selection change to a non-null value, this means someone has switched the active document / toolwindow (or the shell has done
             // so automatically since they closed the previously active one).
-            var windowFrame = (IVsWindowFrame) varValueNew;
+            var windowFrame = (IVsWindowFrame)varValueNew;
 
-            if (!ErrorHandler.Succeeded(windowFrame.GetProperty((int) __VSFPROPID.VSFPROPID_Type, out var untypedProperty))) return VSConstants.S_OK;
-            var typedProperty = (FrameType) (int) untypedProperty;
+            if (!ErrorHandler.Succeeded(windowFrame.GetProperty((int)__VSFPROPID.VSFPROPID_Type, out var untypedProperty))) return VSConstants.S_OK;
+            var typedProperty = (FrameType)(int)untypedProperty;
 
             if (typedProperty != FrameType.Document) return VSConstants.S_OK;
 
-            if (!ErrorHandler.Succeeded(windowFrame.GetProperty((int) __VSFPROPID.VSFPROPID_pszMkDocument, out untypedProperty))) return VSConstants.S_OK;
+            if (!ErrorHandler.Succeeded(windowFrame.GetProperty((int)__VSFPROPID.VSFPROPID_Caption, out untypedProperty))) return VSConstants.S_OK;
 
-            if (!ErrorHandler.Succeeded(windowFrame.GetProperty((int) __VSFPROPID.VSFPROPID_Caption, out untypedProperty))) return VSConstants.S_OK;
-
-            var caption = (string) untypedProperty;
+            var caption = (string)untypedProperty;
 
             //return VSConstants.S_OK;
 
-            if ("Package.appxmanifest".Equals(caption, StringComparison.CurrentCultureIgnoreCase))
+            if ("Package.appxmanifest".Equals(caption, StringComparison.InvariantCultureIgnoreCase))
                 RegisterVectorReader();
 
             return VSConstants.S_OK;
@@ -114,12 +115,12 @@ namespace VisualAssetGenerator
         }
 
         public int OnSelectionChanged(
-            IVsHierarchy pHierOld, 
-            uint itemidOld, 
+            IVsHierarchy pHierOld,
+            uint itemidOld,
             IVsMultiItemSelect pMISOld,
-            ISelectionContainer pSCOld, 
-            IVsHierarchy pHierNew, 
-            uint itemidNew, 
+            ISelectionContainer pSCOld,
+            IVsHierarchy pHierNew,
+            uint itemidNew,
             IVsMultiItemSelect pMISNew,
             ISelectionContainer pSCNew)
         {
@@ -129,15 +130,15 @@ namespace VisualAssetGenerator
 
         private static void RegisterVectorReader()
         {
-            //ThreadHelper.ThrowIfNotOnUIThread();
+            ThreadHelper.ThrowIfNotOnUIThread();
 
-            var dte = (DTE) ServiceProvider.GlobalProvider.GetService(typeof(DTE));
+            var dte = ServiceProvider.GlobalProvider.GetService(typeof(DTE)) as EnvDTE80.DTE2;
 
-            if (dte.ActiveDocument == null) return;
+            Assumes.Present(dte);
+
+            if (dte?.ActiveDocument == null) return;
 
             var uiObject = Exposed.From(((dynamic)dte.ActiveDocument).ActiveWindow.Object).Content;
-
-            //ManifestDesignerUserControlProxy mduc = (ManifestDesignerUserControlProxy) uiObject;
 
             if (!uiObject.IsLoading)
             {
@@ -160,7 +161,7 @@ namespace VisualAssetGenerator
         private static void Mduc_Loaded(object sender)
         {
             var exposed = Exposed.From(sender);
-            var manifestDesignerUserControl = (FrameworkElement) exposed.contentPresenter.Content;
+            var manifestDesignerUserControl = (FrameworkElement)exposed.contentPresenter.Content;
 
             if (Exposed.From(manifestDesignerUserControl).imageSetModel == null)
             {
@@ -168,12 +169,12 @@ namespace VisualAssetGenerator
                 return;
             }
 
-            ManifestDesignerUserControl_Loaded(manifestDesignerUserControl);
+            _ = ManifestDesignerUserControl_LoadedAsync(manifestDesignerUserControl);
         }
 
         private static void ManifestDesignerUserControl_Loaded(object sender, RoutedEventArgs e)
         {
-            ((FrameworkElement) sender).Loaded -= ManifestDesignerUserControl_Loaded;
+            ((FrameworkElement)sender).Loaded -= ManifestDesignerUserControl_Loaded;
 
             if (Exposed.From(sender).AppxDocData?.HasLoaded != true)
             {
@@ -181,37 +182,37 @@ namespace VisualAssetGenerator
                 return;
             }
 
-            ManifestDesignerUserControl_Loaded(sender);
+            _ = ManifestDesignerUserControl_LoadedAsync(sender);
         }
 
         private static EventHandler ManifestDocData_Loaded(object sender)
         {
-            return (s, e) =>  ManifestDocData_Loaded(s, e, sender);
+            return (s, _) => ManifestDocData_Loaded(s, sender);
         }
 
-        private static void ManifestDocData_Loaded(object sender, EventArgs e, object s)
+        private static void ManifestDocData_Loaded(object sender, object s)
         {
             ((IManifestDocDataInternal)sender).Loaded -= ManifestDocData_Loaded(s);
 
-            ManifestDesignerUserControl_Loaded(s);
+            _ = ManifestDesignerUserControl_LoadedAsync(s);
         }
 
-        private static void ManifestDesignerUserControl_Loaded(object sender)
+        private static async Task ManifestDesignerUserControl_LoadedAsync(object sender)
         {
             var imageSetViewModel = _imageSetViewModel = (ImageSetViewModel)Exposed.From(sender).imageSetViewModel;
 
-            if(imageSetViewModel == null) return;
+            if (imageSetViewModel == null) return;
 
             var visualAssetsControl = (FrameworkElement)Exposed.From(sender).visualAssetsControl;
 
             if (!visualAssetsControl.IsLoaded)
             {
-                visualAssetsControl.Loaded -=  VisualAssetsControl_Loaded;
+                visualAssetsControl.Loaded -= VisualAssetsControl_Loaded;
                 visualAssetsControl.Loaded += VisualAssetsControl_Loaded;
             }
 
             var imageSetModel = Exposed.From(sender).imageSetModel;
-            
+
             var imageSetTargetViewModels = (IList<ImageSetTargetViewModel>)imageSetViewModel.ImageTypeTargets;
 
             _imageSetTarget = (ImageSetTarget)imageSetModel.Root;
@@ -222,7 +223,7 @@ namespace VisualAssetGenerator
 
             var imageGeneratorInterface = typeof(IImageConstraint).Assembly
                                                                   .GetTypes()
-                                                                  .First(x => x.Name == "IImageGenerator"); 
+                                                                  .First(x => x.Name == "IImageGenerator");
 
             var imageGeneratorProxy = new ProxyGenerator().CreateInterfaceProxyWithTarget(imageGeneratorInterface,
                                                                                           imageGenerator,
@@ -232,25 +233,25 @@ namespace VisualAssetGenerator
 
             imageGeneratorField.SetValue(imageSetModel, imageGeneratorProxy);
 
-            var filePicker = (IFilePicker) Exposed.From(imageSetModel).filePicker;
+            var filePicker = (IFilePicker)Exposed.From(imageSetModel).filePicker;
 
             if (filePicker.GetType().Name == "IFilePickerProxy") return;
 
             imageSetTargetViewModels.Single(x => x.ImageType == null).PropertyChanged += ImageSetTargetViewModel_PropertyChanged;
             imageSetViewModel.PropertyChanged += ImageSetViewModel_PropertyChanged;
 
-            var proxy = (IFilePicker) new ProxyGenerator().CreateInterfaceProxyWithTarget(typeof(IFilePicker),
-                                                                                          filePicker,
-                                                                                          new DialogFilterInterceptor());
+            var proxy = (IFilePicker)new ProxyGenerator().CreateInterfaceProxyWithTarget(typeof(IFilePicker),
+                                                                                         filePicker,
+                                                                                         new DialogFilterInterceptor());
 
             var filePickerField = typeof(ImageSetModel).GetField("filePicker", BindingFlags.Instance | BindingFlags.NonPublic);
 
-            if(filePickerField == null) return;
+            if (filePickerField == null) return;
 
             filePickerField.SetValue(imageSetModel, proxy);
 
             var imageReaderFactory = Exposed.From(imageGenerator).imageReaderFactory;
-            
+
             if (!(Exposed.From(imageReaderFactory).imageReaders is IDictionary readers)) return;
 
             var formatsToAdd = MagickImageReader.SupportedFormats
@@ -280,7 +281,9 @@ namespace VisualAssetGenerator
                                                                                         ?.GetType()
                                                                                         .GetField("imageReaderFactory", BindingFlags.Instance | BindingFlags.NonPublic);
 
-            if(imageReaderFactoryField == null) return;
+            if (imageReaderFactoryField == null) return;
+
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
 
             foreach (var imageSetTargetViewModel in imageSetTargetViewModels)
             {
@@ -291,14 +294,14 @@ namespace VisualAssetGenerator
                     && formatsToAdd.Any(x => x.Equals(Path.GetExtension(exposedModel.SourceText), StringComparison.InvariantCultureIgnoreCase))
                     && exposedModel.SourceImage == null)
                 {
-                    ((UserControl)sender).Dispatcher.InvokeAsync(() => exposedModel.UpdateImagePreviewAsync());
+                    exposedModel.UpdateImagePreviewAsync();
                 }
             }
         }
 
         private static void ImageSetViewModel_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if(e.PropertyName != nameof(ImageSetViewModel.SelectedImageTypeTarget)) return;
+            if (e.PropertyName != nameof(ImageSetViewModel.SelectedImageTypeTarget)) return;
 
             ApplyFilter((ImageSetViewModel)sender);
         }
@@ -311,7 +314,7 @@ namespace VisualAssetGenerator
 
         private static void ImageSetTargetViewModel_PropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if(e.PropertyName != nameof(ImageSetTargetViewModel.AssetsText)) return;
+            if (e.PropertyName != nameof(ImageSetTargetViewModel.AssetsText)) return;
             var model = sender as ImageSetTargetViewModel;
             ApplyFilter(model);
         }
@@ -325,18 +328,18 @@ namespace VisualAssetGenerator
 
         private static bool Eqs(dynamic selectableItem, SizeConstraintData sizeConstraintData)
         {
-            return selectableItem.IsSelected 
+            return selectableItem.IsSelected
                    && (selectableItem.ImageSetTargets as IEnumerable<ImageSetTarget>)?.Any(x => x.ImageType == sizeConstraintData.ImageType) == true;
         }
 
         private static void VisualAssetsControl_Loaded(object sender, RoutedEventArgs e)
         {
-            var control = (VisualAssetsControl) sender;
+            var control = (VisualAssetsControl)sender;
             control.Loaded -= VisualAssetsControl_Loaded;
 
-            var imageSetView = (ImageSetView) Exposed.From(control).ImageSetView;
+            var imageSetView = (ImageSetView)Exposed.From(control).ImageSetView;
 
-            var assetGeneratorControl = (AssetGeneratorControl) Exposed.From(imageSetView).AssetGeneratorControl;
+            var assetGeneratorControl = (AssetGeneratorControl)Exposed.From(imageSetView).AssetGeneratorControl;
 
             if (!assetGeneratorControl.IsLoaded)
             {
@@ -350,12 +353,12 @@ namespace VisualAssetGenerator
             control.Loaded -= AssetGeneratorControl_Loaded;
             var generateButton = control.FindVisualChildren<Button>().FirstOrDefault(x => x.Name == "GenerateButton");
 
-            var parent = (Grid) (generateButton?.Parent as FrameworkElement)?.Parent;
+            var parent = (Grid)(generateButton?.Parent as FrameworkElement)?.Parent;
 
             if (parent == null) return;
 
-            parent.RowDefinitions.Add(new RowDefinition{Height = GridLength.Auto});
-            parent.RowDefinitions.Add(new RowDefinition{Height = GridLength.Auto});
+            parent.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            parent.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
             _sizeControl = new SizeConstraintControl();
 
@@ -363,7 +366,7 @@ namespace VisualAssetGenerator
             _sizeControl.ContentFractionExpander.Style = expander.Style;
 
             _sizeControl.DataChanged += SizeConstraints_CollectionChanged;
-            
+
             _sizeControl.LoadData();
 
             _sizeControl.SetValue(Grid.RowProperty, 1);
@@ -401,8 +404,7 @@ namespace VisualAssetGenerator
         // NOTE: Values obtained from https://docs.microsoft.com/en-us/dotnet/api/microsoft.visualstudio.shell.interop.__vsfpropid.vsfpropid_type, specifically the part for VSFPROPID_Type.
         private enum FrameType
         {
-            Document = 1,
-//            ToolWindow = 2
+            Document = 1
         }
     }
 }

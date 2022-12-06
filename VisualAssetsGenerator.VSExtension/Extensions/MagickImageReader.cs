@@ -1,4 +1,6 @@
-﻿using System;
+﻿using ImageMagick;
+using Microsoft.VisualStudio.DesignTools.ImageSet;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -8,8 +10,6 @@ using System.Windows.Documents;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Xps.Packaging;
-using ImageMagick;
-using Microsoft.VisualStudio.DesignTools.ImageSet;
 using Size = System.Drawing.Size;
 
 
@@ -30,25 +30,25 @@ namespace VisualAssetGenerator.Extensions
         public static async Task<Image> LoadAsync(string path, IEnumerable<IImageConstraint> constraints)
         {
             var stream = await LoadStreamAsync(path, constraints);
-            
+
             return Image.FromStream(stream);
         }
 
-        public static async Task<Stream> LoadStreamAsync(string path, IEnumerable<IImageConstraint> constraints = null)
+        public static Task<Stream> LoadStreamAsync(string path, IEnumerable<IImageConstraint> constraints = null)
         {
             var sizeConstraint = constraints?.OfType<SizeConstraint>().FirstOrDefault();
 
             if (".xps".Equals(Path.GetExtension(path), StringComparison.InvariantCultureIgnoreCase))
-                return GetXpsStream(path, CalculateRenderSize(sizeConstraint));
+                return Task.FromResult(GetXpsStream(path, CalculateRenderSize(sizeConstraint)));
 
-            return await GetMagickStreamAsync(path, CalculateRenderSize(sizeConstraint));
+            return GetMagickStreamAsync(path, CalculateRenderSize(sizeConstraint));
         }
 
         private static Size? CalculateRenderSize(SizeConstraint constraint)
         {
             if (constraint == null) return null;
 
-            if (!constraint.ShouldUsePadding || constraint.Padding.Bottom == 0 && constraint.Padding.Top ==  0 && constraint.Padding.Left == 0 && constraint.Padding.Right == 0) return constraint.Size;
+            if (!constraint.ShouldUsePadding || constraint.Padding.Bottom == 0 && constraint.Padding.Top == 0 && constraint.Padding.Left == 0 && constraint.Padding.Right == 0) return constraint.Size;
 
             var thickness = constraint.Padding;
             var size = constraint.Size;
@@ -58,7 +58,7 @@ namespace VisualAssetGenerator.Extensions
             var height = size.Height - (int)Math.Round(thickness.Top + thickness.Bottom);
             if (height < 0)
                 height = 0;
-            
+
             return new Size(width, height);
         }
 
@@ -88,8 +88,8 @@ namespace VisualAssetGenerator.Extensions
 
                 var size = sizeConstraint ?? new Size
                 {
-                    Height = (int) firstPage.Size.Height,
-                    Width = (int) firstPage.Size.Width
+                    Height = (int)firstPage.Size.Height,
+                    Width = (int)firstPage.Size.Width
                 };
 
                 var scaledVisual = GetScaledVisual(firstPage, size);
@@ -97,16 +97,9 @@ namespace VisualAssetGenerator.Extensions
                 var renderTarget = new RenderTargetBitmap(scaledVisual.Item2.Width, scaledVisual.Item2.Height, 96, 96, PixelFormats.Default);
                 renderTarget.Render(scaledVisual.Item1);
 
-                //var resizedBitmap = (sizeConstraint?.Size.Width != (int)firstPage.Size.Width 
-                //                    || sizeConstraint.Size.Height != (int)firstPage.Size.Height)
-                //                    && sizeConstraint != null
-                //                    ? GetResizedBitmap(renderTarget, sizeConstraint.Size)
-                //                    : renderTarget;
-
-
                 var encoder = new PngBitmapEncoder
                 {
-                    Frames = {BitmapFrame.Create(renderTarget)}
+                    Frames = { BitmapFrame.Create(renderTarget) }
                 };
 
                 var stream = new MemoryStream();
@@ -122,8 +115,8 @@ namespace VisualAssetGenerator.Extensions
             var scaleWidth = newSize.Width / page.Size.Width;
             var scaleHeight = newSize.Height / page.Size.Height;
             var scale = Math.Min(scaleHeight, scaleWidth);
-            
-            var scaledSize = new Size((int)(page.Size.Width*scale),(int)(page.Size.Height*scale));
+
+            var scaledSize = new Size((int)(page.Size.Width * scale), (int)(page.Size.Height * scale));
 
             var root = new ContainerVisual
             {
@@ -154,6 +147,6 @@ namespace VisualAssetGenerator.Extensions
             };
 
             return magickImage;
-        }        
-    }    
+        }
+    }
 }
