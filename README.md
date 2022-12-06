@@ -26,4 +26,6 @@ This tool has been working well for my own personal needs, but outside that its 
 
 1. [Microsoft guidelines for App icons and logos](https://msdn.microsoft.com/en-us/windows/uwp/controls-and-patterns/tiles-and-notifications-app-assets)
 
-2.  [Magick.NET. The .NET library for ImageMagick](https://github.com/dlemstra/Magick.NET/tree/master/Documentation)
+2. [Magick.NET. The .NET library for ImageMagick](https://github.com/dlemstra/Magick.NET/tree/master/Documentation)
+
+3. [Previous versions](https://github.com/ycherkes/VisualAssetsGenerator/releases)
