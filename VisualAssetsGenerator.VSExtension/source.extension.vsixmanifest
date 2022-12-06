@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
 	<Metadata>
-		<Identity Id="VisualAssetsGenerator.42FBAF77-485E-4700-8357-A066BE1DF84C" Version="0.87" Language="en-US" Publisher="Yevhen Cherkes" />
+		<Identity Id="VisualAssetsGenerator.42FBAF77-485E-4700-8357-A066BE1DF84C" Version="0.88" Language="en-US" Publisher="Yevhen Cherkes" />
 		<DisplayName>Visual Assets Generator</DisplayName>
 		<Description xml:space="preserve">Extends standard Visual Studio Assets Generator with new vector image formats and image sizing capability.</Description>
 		<Icon>Package.ico</Icon>
