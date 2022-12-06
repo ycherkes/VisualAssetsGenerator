@@ -1,7 +1,8 @@
-﻿using System;
-using System.IO;
-using EnvDTE;
+﻿using EnvDTE;
+using EnvDTE80;
 using Microsoft.VisualStudio.Shell;
+using System;
+using System.IO;
 
 namespace VisualAssetGenerator.Extensions
 {
@@ -9,10 +10,11 @@ namespace VisualAssetGenerator.Extensions
     {
         public static string GetSolutionPath()
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             try
             {
-                var solution = ((DTE)ServiceProvider.GlobalProvider.GetService(typeof(DTE))).Solution;
-                if (!string.IsNullOrEmpty(solution.FullName))
+                var solution = (ServiceProvider.GlobalProvider.GetService(typeof(DTE)) as DTE2)?.Solution;
+                if (!string.IsNullOrEmpty(solution?.FullName))
                 {
                     return Path.GetDirectoryName(solution.FullName);
                 }

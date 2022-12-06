@@ -39,7 +39,7 @@
 
   <Symbols>
     <!-- This is the package guid. -->
-    <GuidSymbol name="guidVisualAssetsGeneratorPackage" value="{42FBAF77-485E-4700-8357-A066BE1DF84C}" />
+    <GuidSymbol name="guidVisualAssetsGeneratorPackage" value="{cc9c557e-be6e-45bb-9c05-093d0efa93cc}" />
 
     <GuidSymbol name="guidImages" value="{f961d117-6ea8-4f0a-b882-f34eba13938d}">
       <IDSymbol name="bmpPic1" value="1" />

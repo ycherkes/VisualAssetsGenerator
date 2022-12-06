@@ -1,4 +1,7 @@
-﻿using System;
+﻿using Microsoft.VisualStudio.Settings;
+using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Settings;
+using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -7,9 +10,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
-using Microsoft.VisualStudio.Settings;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Settings;
 using VisualAssetGenerator.Model;
 
 namespace VisualAssetGenerator.Controls
@@ -25,6 +25,7 @@ namespace VisualAssetGenerator.Controls
 
         public SizeConstraintControl()
         {
+            ThreadHelper.ThrowIfNotOnUIThread();
             InitializeComponent();
             ViewModel.CollectionChanged += CollectionChanged;
             lbContentFraction.PreviewMouseWheel += OnPreviewMouseWheel;
@@ -67,10 +68,10 @@ namespace VisualAssetGenerator.Controls
         }
 
         private void CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
-        {   
+        {
             DataChanged?.Invoke(sender, e);
 
-            if(_isLoading) return;
+            if (_isLoading) return;
 
             var serializer = new JavaScriptSerializer();
             var serializedValue = serializer.Serialize(ViewModel);
