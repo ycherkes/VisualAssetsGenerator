@@ -18,7 +18,7 @@ Sometimes it renders SVG incorrectly, and it can be fixed by inlining CSS styles
 
 **Privacy Notice:** No personal data is collected at all.
 
-This tool has been working well for my own personal needs, but outside that its future depends on your feedback. Feel free to [open an issue](https://github.com/ycherkes/ObjectDumper/issues).
+This tool has been working well for my own personal needs, but outside that its future depends on your feedback. Feel free to [open an issue](https://github.com/ycherkes/VisualAssetsGenerator/issues).
 
 [![PayPal](https://img.shields.io/badge/Donate-PayPal-ffd700.svg?labelColor=0057b7&style=for-the-badge)](https://www.paypal.com/donate/?business=KXGF7CMW8Y8WJ&no_recurring=0&item_name=Help+Visual+Assets+Generator+become+better%21)
 
