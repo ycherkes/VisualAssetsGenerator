@@ -9,6 +9,8 @@
 
 Extends standard Visual Studio Assets Generator with additional vector image formats and image sizing capability.
 
+Inspired by [UWP Visual Assets Generator by Peter_R_](https://marketplace.visualstudio.com/items?itemName=PeterR.UWPVisualAssetsGenerator)
+
 ![AssetGeneratorExtensionDemo](https://user-images.githubusercontent.com/13467759/205864968-8e332b14-6708-4e74-b7ac-2c1e89a23f17.png)
 
 **Known Issues:**
