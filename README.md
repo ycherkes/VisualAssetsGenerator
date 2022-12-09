@@ -7,7 +7,7 @@
 [![Marketplace](https://img.shields.io/visual-studio-marketplace/v/YevhenCherkes.AssetGeneratorExtended.svg?label=VS%20marketplace&style=for-the-badge)](https://marketplace.visualstudio.com/items?itemName=YevhenCherkes.AssetGeneratorExtended)
 [![Downloads](https://img.shields.io/visual-studio-marketplace/d/YevhenCherkes.AssetGeneratorExtended?label=VS%20downloads&style=for-the-badge)](https://marketplace.visualstudio.com/items?itemName=YevhenCherkes.AssetGeneratorExtended)
 
-Extends builtin Visual Studio Assets Generator with additional vector image formats (**emf, eps, psd, svg, wmf, xps**) and image sizing capability.
+Extends builtin Visual Studio Assets Generator with additional vector image formats (**emf, eps, psd, svg, wmf, xps**) and image resizing capability.
 
 Inspired by [UWP Visual Assets Generator by Peter_R_](https://marketplace.visualstudio.com/items?itemName=PeterR.UWPVisualAssetsGenerator)
 
