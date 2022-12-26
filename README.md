@@ -5,7 +5,7 @@
 # Visual Assets Generator
 
 [![Marketplace](https://img.shields.io/visual-studio-marketplace/v/YevhenCherkes.AssetGeneratorExtended.svg?label=VS%20marketplace&style=for-the-badge)](https://marketplace.visualstudio.com/items?itemName=YevhenCherkes.AssetGeneratorExtended)
-[![Downloads](https://img.shields.io/visual-studio-marketplace/d/YevhenCherkes.AssetGeneratorExtended?label=VS%20downloads&style=for-the-badge)](https://marketplace.visualstudio.com/items?itemName=YevhenCherkes.AssetGeneratorExtended)
+[![Installs](https://img.shields.io/visual-studio-marketplace/i/YevhenCherkes.AssetGeneratorExtended?label=VS%20installs&style=for-the-badge)](https://marketplace.visualstudio.com/items?itemName=YevhenCherkes.AssetGeneratorExtended)
 
 Enriches builtin Visual Studio Assets Generator by additional vector image formats (**emf, eps, psd, svg, wmf, xps**) and ability to override recommended padding (see the **"Content Width"** section in the image below).
 
